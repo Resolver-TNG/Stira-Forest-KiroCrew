@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node / UI build
+node_modules/
+*.tsbuildinfo
+# Shipped UI bundle lives at ui/dist/index.mjs (served from /apps/<name>/ui/),
+# required at install time, so it is tracked while the rest of ui/dist is ignored.
+ui/dist/*
+!ui/dist/index.mjs
+ui/preview-dist/
+
+# Stira runtime data (never commit live state)
+.stira/
+crews/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Secrets
+.env
+*.pem
+*.key

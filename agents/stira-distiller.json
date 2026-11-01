@@ -1,0 +1,37 @@
+{
+  "name": "stira-distiller",
+  "description": "Stira background distiller — reads one staged harvest candidate package, judges inert evidence against the crew IPD mission, and writes accepted knowledge through a five-tool server-enforced Stira MCP allowlist.",
+  "model": "auto",
+  "tools": [
+    "@stira:distiller/stira_get_harvest_candidates",
+    "@stira:distiller/stira_get_knowledge",
+    "@stira:distiller/stira_record_harvest_run",
+    "@stira:distiller/stira_suggest_score",
+    "@stira:distiller/stira_write_knowledge"
+  ],
+  "includeMcpJson": false,
+  "mcpServers": {},
+  "managedToolPolicy": {
+    "exclude": [
+      "browser",
+      "code",
+      "cron_add",
+      "cron_remove",
+      "cron_remove_all",
+      "cron_update",
+      "glob",
+      "grep",
+      "knowledge",
+      "read",
+      "report_issue",
+      "send_message",
+      "shell",
+      "spawn_run",
+      "task_run",
+      "use_aws",
+      "web_fetch",
+      "web_search",
+      "write"
+    ]
+  }
+}

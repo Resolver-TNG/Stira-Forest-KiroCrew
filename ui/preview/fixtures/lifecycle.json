@@ -1,0 +1,42 @@
+{
+  "crew": {
+    "name": "Lifecycle Crew",
+    "stability": 0.74,
+    "growth": 0.61,
+    "purposeDrift": 0.03,
+    "meansDrift": 0.09
+  },
+  "viewWidth": 640,
+  "leaves": [
+    { "id": "life-active-01", "domain": "architecture", "layer": "core", "effectiveScore": 0.96, "life": 0.94, "contentLength": 2100 },
+    { "id": "life-active-02", "domain": "security", "layer": "knowledge", "effectiveScore": 0.82, "life": 0.78, "contentLength": 1200 },
+    { "id": "life-active-03", "domain": "operations", "layer": "knowledge", "effectiveScore": 0.64, "life": 0.44, "contentLength": 760 },
+    { "id": "life-active-04", "domain": "deployment", "layer": "knowledge", "effectiveScore": 0.51, "life": 0.18, "contentLength": 550, "tags": ["withering"] },
+    { "id": "life-active-05", "domain": "config", "layer": "log", "effectiveScore": 0.33, "life": 0.12, "contentLength": 260, "tags": ["withering"] },
+    { "id": "life-active-06", "domain": "routing", "layer": "log", "effectiveScore": 0.27, "life": 0.08, "contentLength": 140, "tags": ["withering"] },
+    { "id": "life-active-07", "domain": "observability", "layer": "knowledge", "effectiveScore": 0.73, "life": 0.67, "contentLength": 930 },
+    { "id": "life-active-08", "domain": "governance", "layer": "core", "effectiveScore": 0.89, "life": 0.83, "contentLength": 1680 }
+  ],
+  "fallenLeaves": [
+    { "id": "fallen-01", "domain": "architecture", "layer": "log", "effectiveScore": 0.07, "life": 0.03, "contentLength": 180, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-02", "domain": "security", "layer": "knowledge", "effectiveScore": 0.09, "life": 0.04, "contentLength": 260, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-03", "domain": "operations", "layer": "log", "effectiveScore": 0.11, "life": 0.06, "contentLength": 140, "archived": true, "archivedReason": "pruned" },
+    { "id": "fallen-04", "domain": "deployment", "layer": "log", "effectiveScore": 0.05, "life": 0.02, "contentLength": 90, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-05", "domain": "config", "layer": "knowledge", "effectiveScore": 0.1, "life": 0.05, "contentLength": 310, "archived": true, "archivedReason": "pruned" },
+    { "id": "fallen-06", "domain": "routing", "layer": "log", "effectiveScore": 0.04, "life": 0.02, "contentLength": 120, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-07", "domain": "observability", "layer": "knowledge", "effectiveScore": 0.08, "life": 0.04, "contentLength": 280, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-08", "domain": "governance", "layer": "core", "effectiveScore": 0.11, "life": 0.07, "contentLength": 540, "archived": true, "archivedReason": "pruned" },
+    { "id": "fallen-09", "domain": "testing", "layer": "log", "effectiveScore": 0.06, "life": 0.03, "contentLength": 160, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-10", "domain": "data", "layer": "knowledge", "effectiveScore": 0.1, "life": 0.05, "contentLength": 390, "archived": true, "archivedReason": "pruned" },
+    { "id": "fallen-11", "domain": "collaboration", "layer": "log", "effectiveScore": 0.07, "life": 0.04, "contentLength": 220, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-12", "domain": "architecture", "layer": "knowledge", "effectiveScore": 0.09, "life": 0.05, "contentLength": 330, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-13", "domain": "security", "layer": "log", "effectiveScore": 0.05, "life": 0.02, "contentLength": 110, "archived": true, "archivedReason": "pruned" },
+    { "id": "fallen-14", "domain": "operations", "layer": "knowledge", "effectiveScore": 0.1, "life": 0.06, "contentLength": 410, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-15", "domain": "deployment", "layer": "knowledge", "effectiveScore": 0.08, "life": 0.04, "contentLength": 270, "archived": true, "archivedReason": "pruned" },
+    { "id": "fallen-16", "domain": "config", "layer": "log", "effectiveScore": 0.03, "life": 0.01, "contentLength": 80, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-17", "domain": "routing", "layer": "knowledge", "effectiveScore": 0.11, "life": 0.07, "contentLength": 360, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-18", "domain": "observability", "layer": "log", "effectiveScore": 0.06, "life": 0.03, "contentLength": 130, "archived": true, "archivedReason": "pruned" },
+    { "id": "fallen-19", "domain": "governance", "layer": "knowledge", "effectiveScore": 0.09, "life": 0.05, "contentLength": 300, "archived": true, "archivedReason": "faded" },
+    { "id": "fallen-20", "domain": "testing", "layer": "log", "effectiveScore": 0.04, "life": 0.02, "contentLength": 100, "archived": true, "archivedReason": "pruned" }
+  ]
+}

@@ -1,0 +1,9 @@
+Stira Forest
+Copyright 2026 Resolver-TNG
+
+This product includes software developed by Resolver-TNG.
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+The shipped UI bundle (ui/dist/index.mjs) is built from source in ui/src/. It
+imports React (https://react.dev/, MIT License, Copyright (c) Meta Platforms,
+Inc. and affiliates) from the Kiro Crew host at runtime and does not embed it.

@@ -1,0 +1,6 @@
+# Paths left out of the public repository (tools/export_public.mjs).
+# One path prefix per line, relative to the repo root. Lines starting with # are comments.
+
+# Internal notes: alpha status brief, roadmap/work log, operations runbook,
+# design specs, and the steering template for the KIRO-customize path.
+docs/dev/

@@ -1,0 +1,18 @@
+{
+  "crew": {
+    "name": "Sparse Crew",
+    "stability": 0.58,
+    "growth": 0.24,
+    "purposeDrift": 0,
+    "meansDrift": 0
+  },
+  "viewWidth": 640,
+  "leaves": [
+    { "id": "sparse-01", "domain": "architecture", "layer": "core", "effectiveScore": 0.93, "life": 0.92, "contentLength": 1450 },
+    { "id": "sparse-02", "domain": "architecture", "layer": "knowledge", "effectiveScore": 0.68, "life": 0.74, "contentLength": 620 },
+    { "id": "sparse-03", "domain": "architecture", "layer": "log", "effectiveScore": 0.31, "life": 0.35, "contentLength": 180 },
+    { "id": "sparse-04", "domain": "operations", "layer": "knowledge", "effectiveScore": 0.77, "life": 0.81, "contentLength": 980 },
+    { "id": "sparse-05", "domain": "operations", "layer": "log", "effectiveScore": 0.42, "life": 0.29, "contentLength": 320 }
+  ],
+  "fallenLeaves": []
+}

@@ -1,0 +1,40 @@
+{
+  "crew": {
+    "name": "Crowded Crew",
+    "stability": 0.82,
+    "growth": 0.76,
+    "purposeDrift": 0.08,
+    "meansDrift": 0.18
+  },
+  "viewWidth": 640,
+  "leaves": [
+    { "id": "crowded-01", "domain": "architecture", "layer": "knowledge", "effectiveScore": 0.94, "life": 0.91, "contentLength": 1840, "tags": ["design"] },
+    { "id": "crowded-02", "domain": "architecture", "layer": "knowledge", "effectiveScore": 0.71, "life": 0.64, "contentLength": 920 },
+    { "id": "crowded-03", "domain": "architecture", "layer": "knowledge", "effectiveScore": 0.38, "life": 0.43, "contentLength": 280 },
+    { "id": "crowded-04", "domain": "security", "layer": "knowledge", "effectiveScore": 0.88, "life": 0.79, "contentLength": 1460, "tags": ["threat-model"] },
+    { "id": "crowded-05", "domain": "security", "layer": "knowledge", "effectiveScore": 0.59, "life": 0.33, "contentLength": 670 },
+    { "id": "crowded-06", "domain": "security", "layer": "knowledge", "effectiveScore": 0.29, "life": 0.16, "contentLength": 190 },
+    { "id": "crowded-07", "domain": "operations", "layer": "knowledge", "effectiveScore": 0.91, "life": 0.86, "contentLength": 2010 },
+    { "id": "crowded-08", "domain": "operations", "layer": "knowledge", "effectiveScore": 0.66, "life": 0.54, "contentLength": 1110 },
+    { "id": "crowded-09", "domain": "operations", "layer": "knowledge", "effectiveScore": 0.42, "life": 0.27, "contentLength": 430 },
+    { "id": "crowded-10", "domain": "deployment", "layer": "knowledge", "effectiveScore": 0.84, "life": 0.82, "contentLength": 1280 },
+    { "id": "crowded-11", "domain": "deployment", "layer": "knowledge", "effectiveScore": 0.55, "life": 0.48, "contentLength": 760 },
+    { "id": "crowded-12", "domain": "deployment", "layer": "knowledge", "effectiveScore": 0.22, "life": 0.13, "contentLength": 160 },
+    { "id": "crowded-13", "domain": "routing", "layer": "knowledge", "effectiveScore": 0.79, "life": 0.73, "contentLength": 980 },
+    { "id": "crowded-14", "domain": "routing", "layer": "knowledge", "effectiveScore": 0.63, "life": 0.51, "contentLength": 530 },
+    { "id": "crowded-15", "domain": "routing", "layer": "knowledge", "effectiveScore": 0.34, "life": 0.21, "contentLength": 240 },
+    { "id": "crowded-16", "domain": "config", "layer": "knowledge", "effectiveScore": 0.97, "life": 0.95, "contentLength": 2300 },
+    { "id": "crowded-17", "domain": "config", "layer": "knowledge", "effectiveScore": 0.69, "life": 0.58, "contentLength": 870 },
+    { "id": "crowded-18", "domain": "config", "layer": "knowledge", "effectiveScore": 0.31, "life": 0.18, "contentLength": 310 },
+    { "id": "crowded-19", "domain": "observability", "layer": "knowledge", "effectiveScore": 0.86, "life": 0.84, "contentLength": 1570 },
+    { "id": "crowded-20", "domain": "observability", "layer": "knowledge", "effectiveScore": 0.61, "life": 0.46, "contentLength": 690 },
+    { "id": "crowded-21", "domain": "observability", "layer": "knowledge", "effectiveScore": 0.26, "life": 0.11, "contentLength": 120 },
+    { "id": "crowded-22", "domain": "governance", "layer": "core", "effectiveScore": 0.99, "life": 0.97, "contentLength": 2600 },
+    { "id": "crowded-23", "domain": "governance", "layer": "log", "effectiveScore": 0.18, "life": 0.14, "contentLength": 350 },
+    { "id": "crowded-24", "domain": "testing", "layer": "core", "effectiveScore": 0.92, "life": 0.89, "contentLength": 1750 },
+    { "id": "crowded-25", "domain": "testing", "layer": "log", "effectiveScore": 0.24, "life": 0.19, "contentLength": 210 },
+    { "id": "crowded-26", "domain": "data", "layer": "core", "effectiveScore": 0.87, "life": 0.77, "contentLength": 1340 },
+    { "id": "crowded-27", "domain": "collaboration", "layer": "log", "effectiveScore": 0.36, "life": 0.23, "contentLength": 490 }
+  ],
+  "fallenLeaves": []
+}

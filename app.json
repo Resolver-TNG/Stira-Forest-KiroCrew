@@ -1,0 +1,140 @@
+{
+  "name": "stira",
+  "version": "0.3.0",
+  "displayName": "Stira Forest",
+  "description": "Give each AI crew an immutable mission (IPD) and let it grow a living tree of mission-aligned knowledge distilled from its own work. Enable and go — no steering or hooks to hand-edit.",
+  "author": "Resolver-TNG",
+  "license": "Apache-2.0",
+  "minKiroCrewVersion": "0.11.0",
+  "iconPath": "assets/icon.png",
+  "heroImage": "assets/hero.png",
+  "heroImageDetail": "assets/hero-detail.png",
+  "screenshots": [
+    "assets/screenshots/forest.png"
+  ],
+  "highlights": [
+    "Each crew gets an immutable core (IPD): its P0 mission, set once from the dashboard and hash-monitored for tampering",
+    "Knowledge is harvested from the crew's own sessions and distilled into scored leaves — a living tree per crew",
+    "The core is held constant so growth never drifts the mission; a tampered core trips an integrity breaker",
+    "A bundled skill teaches crews the library model: read the core and the index first, open only the leaves they need",
+    "Enable the app and go — background reflection crons ship disabled and off until you turn them on"
+  ],
+  "useCases": [
+    "Keep an autonomous crew aligned with a fixed mission while it accumulates reusable, mission-checked knowledge from experience."
+  ],
+  "configuration": [
+    "Enable the app; Stira Forest appears in the sidebar. Define each crew's core (IPD) from the Forest page, then optionally turn on the reflection crons from its schedule panel."
+  ],
+  "platform": {
+    "os": [
+      "windows",
+      "macos",
+      "linux"
+    ]
+  },
+  "mcpServers": {
+    "stira": {
+      "url": "http://127.0.0.1:9137/mcp",
+      "disabled": false
+    },
+    "distiller": {
+      "url": "http://127.0.0.1:9137/mcp/distiller",
+      "disabled": false
+    }
+  },
+  "permissions": {
+    "api": [
+      "/api/apps/stira",
+      "/api/apps/stira/*"
+    ],
+    "storage": true,
+    "cron": true,
+    "spawn": true,
+    "mcpTools": [
+      "send_message"
+    ]
+  },
+  "agents": [
+    "agents/stira-distiller.json"
+  ],
+  "skills": [
+    "skills/stira-forest"
+  ],
+  "backend": {
+    "entryPoint": "backend/mcp_http_server.py",
+    "type": "python",
+    "port": "9137",
+    "healthCheck": "/health",
+    "hooks": {
+      "on_startup": "backend.hooks:on_startup",
+      "routes": "backend.routes:register_routes",
+      "on_shutdown": "backend.hooks:on_shutdown"
+    }
+  },
+  "ui": {
+    "entry": "dist/index.mjs",
+    "pages": [
+      {
+        "route": "/apps/stira",
+        "label": "Stira Forest",
+        "icon": "Trees"
+      }
+    ]
+  },
+  "crons": [
+    {
+      "name": "core-hash-monitor",
+      "every": 300,
+      "script": "backend/crons/core_hash_monitor.py:run",
+      "persistent_session": false,
+      "silent": true,
+      "enabled": false
+    },
+    {
+      "name": "purpose-drift-check",
+      "every": 900,
+      "script": "backend/crons/purpose_drift_check.py:run",
+      "persistent_session": false,
+      "silent": true,
+      "enabled": false
+    },
+    {
+      "name": "means-drift-reflection",
+      "every": 3600,
+      "message": "Run Stira means-drift reflection for every configured crew. Compare recent choices with each crew's immutable IPD mission, inventory impact scope, record only evidence-backed drift findings, and notify the human only when review or intervention is required. If no IPD is configured or nothing changed, produce no output.",
+      "persistent_session": false,
+      "silent": true,
+      "enabled": false
+    },
+    {
+      "name": "knowledge-integrity",
+      "every": 21600,
+      "script": "backend/crons/knowledge_integrity.py:run",
+      "persistent_session": false,
+      "silent": true,
+      "enabled": false
+    },
+    {
+      "name": "knowledge-harvest",
+      "every": 21600,
+      "script": "backend/crons/knowledge_harvest.py:run",
+      "persistent_session": false,
+      "silent": true,
+      "enabled": false
+    },
+    {
+      "name": "habituation-offset",
+      "every": 604800,
+      "message": "Run Stira habituation-offset reflection for every configured crew whose growth indicates increasing mastery. Re-inventory blast radius, assumptions, reversibility, approvals, and less-disproportionate alternatives against that crew's immutable IPD mission. Persist only reusable evidence-backed lessons and notify the human only when action is required. If no IPD is configured or nothing changed, produce no output.",
+      "persistent_session": false,
+      "silent": true,
+      "enabled": false
+    }
+  ],
+  "tags": [
+    "agent-alignment",
+    "drift-detection",
+    "knowledge",
+    "ipd"
+  ]
+}
