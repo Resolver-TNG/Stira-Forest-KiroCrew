@@ -118,9 +118,14 @@ is fixed because the MCP endpoint URLs above pin it.
 
 ## Known limitations
 
-- **Large harvest candidates.** When a crew's collected harvest candidate
-  package exceeds roughly 100 KB, the distiller can fail on that run. Keep an
-  eye on very large sessions until this is chunked.
+- **Harvest evidence is bounded, so it is partial for busy crews.** The staged
+  candidate package is capped at about 24,000 characters (each message is clipped
+  to 1,500) so the distiller can read it whole through the tool-output limit. When
+  a crew has more evidence than that, the oldest messages of each session are
+  dropped first and every session keeps a fair share. The package says so in
+  `evidenceBudget`; the distiller must not read missing evidence as "nothing
+  happened". Very long histories are therefore harvested in recent slices rather
+  than all at once.
 - **Scheduled script crons.** The reflection script crons document the intended
   app-owned layout; depending on your Kiro Crew version, app-root-relative
   script crons may require host support to register. Manual harvest from the

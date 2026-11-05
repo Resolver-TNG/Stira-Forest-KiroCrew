@@ -423,3 +423,176 @@ def test_collect_harvest_input_redacts_credentials(tmp_path) -> None:
     assert fake not in _json.dumps(result)
     assert "[redacted]" in result["crews"][0]["sessions"][0]["messages"][0]["content"]
 # ── End public-release review F3 ───────────────────────────────────────────
+
+
+
+# ── Evidence budget: keep the staged package readable through the tool ────────
+# Regression for `candidate_retrieval / OutputTruncated`: a crew with many long
+# sessions produced a ~100k-char package, past the ~30k tool-output cap, so the
+# distiller could not read the middle of it and the run failed closed.
+TOOL_OUTPUT_CAP = 30_000
+
+
+def _tool_size(value) -> int:
+    import json as _json
+
+    # Same serialization stira_get_harvest_candidates returns.
+    return len(_json.dumps({"ok": True, "candidates": value}, ensure_ascii=False, indent=2))
+
+
+def _crew_entry(sessions: int, messages: int, chars: int, ipd: str = "P0 mission") -> dict:
+    return {
+        "crew": "default",
+        "ipdStatus": "present",
+        "ipd": ipd,
+        "sessions": [
+            {
+                "title": f"session {s}",
+                "session_key": f"dashboard_chat-{s}",
+                "agent": "default",
+                "messages": [
+                    {"index": i, "role": "user" if i % 2 == 0 else "assistant",
+                     "content": f"s{s}m{i} " + "あ" * chars}
+                    for i in range(messages)
+                ],
+            }
+            for s in range(sessions)
+        ],
+        "cronRuns": [],
+        "subagents": [],
+        "agentsSeen": [{"agent": "default", "count": sessions}],
+    }
+
+
+def test_fit_crew_to_budget_bounds_a_100k_package_below_the_tool_cap() -> None:
+    from backend.harvest import fit_crew_to_budget
+
+    entry = _crew_entry(sessions=8, messages=200, chars=400)
+    assert _tool_size(entry) > 100_000  # the real failure size
+
+    fitted = fit_crew_to_budget(entry)
+
+    assert _tool_size(fitted) <= TOOL_OUTPUT_CAP
+    budget = fitted["evidenceBudget"]
+    assert budget["partial"] is True
+    assert budget["droppedMessages"] > 0
+    assert budget["overBudget"] is False
+
+
+def test_fit_crew_to_budget_gives_every_session_a_share_and_keeps_the_newest() -> None:
+    from backend.harvest import fit_crew_to_budget
+
+    fitted = fit_crew_to_budget(_crew_entry(sessions=8, messages=200, chars=400))
+
+    for session in fitted["sessions"]:
+        kept = session["messages"]
+        assert kept, "no session may be starved to zero messages"
+        # Dropped from the front: the newest message survives, order is preserved.
+        assert kept[-1]["index"] == 199
+        indexes = [m["index"] for m in kept]
+        assert indexes == sorted(indexes)
+
+
+def test_fit_crew_to_budget_small_input_is_unchanged_apart_from_the_report() -> None:
+    from backend.harvest import fit_crew_to_budget
+
+    entry = _crew_entry(sessions=2, messages=3, chars=10)
+    fitted = fit_crew_to_budget(entry)
+
+    assert fitted["sessions"] == entry["sessions"]
+    assert fitted["evidenceBudget"]["partial"] is False
+    assert fitted["evidenceBudget"]["droppedMessages"] == 0
+    assert fitted["evidenceBudget"]["truncatedMessages"] == 0
+
+
+def test_fit_crew_to_budget_clips_one_huge_message_and_says_so() -> None:
+    from backend.harvest import fit_crew_to_budget
+
+    entry = _crew_entry(sessions=1, messages=1, chars=50_000)
+    fitted = fit_crew_to_budget(entry, max_message_chars=500)
+
+    content = fitted["sessions"][0]["messages"][0]["content"]
+    assert content.startswith("s0m0 ")
+    assert "[truncated " in content
+    assert len(content) < 700
+    assert fitted["evidenceBudget"]["truncatedMessages"] == 1
+
+
+def test_fit_crew_to_budget_is_pure_and_deterministic() -> None:
+    import copy
+
+    from backend.harvest import fit_crew_to_budget
+
+    entry = _crew_entry(sessions=5, messages=100, chars=300)
+    snapshot = copy.deepcopy(entry)
+
+    first = fit_crew_to_budget(entry)
+    second = fit_crew_to_budget(entry)
+
+    assert entry == snapshot  # input never mutated
+    assert first == second
+
+
+def test_fit_crew_to_budget_never_crashes_when_the_core_alone_is_huge() -> None:
+    from backend.harvest import fit_crew_to_budget
+
+    entry = _crew_entry(sessions=3, messages=10, chars=200, ipd="芯" * 40_000)
+    fitted = fit_crew_to_budget(entry)
+
+    assert all(s["messages"] == [] for s in fitted["sessions"])
+    assert fitted["evidenceBudget"]["overBudget"] is True
+
+
+@pytest.mark.parametrize("bad", [0, -1, True, "x"])
+def test_fit_crew_to_budget_rejects_invalid_limits(bad) -> None:
+    from backend.harvest import fit_crew_to_budget
+
+    with pytest.raises(ValueError):
+        fit_crew_to_budget(_crew_entry(1, 1, 1), max_chars=bad)
+    with pytest.raises(ValueError):
+        fit_crew_to_budget(_crew_entry(1, 1, 1), max_message_chars=bad)
+
+
+def test_collect_harvest_input_stages_a_package_the_tool_can_return_whole(tmp_path) -> None:
+    # End to end on synthetic dirs: many long Japanese sessions -> the package the
+    # route stages (collect + route-added fields) fits under the tool cap.
+    import json as _json
+
+    stira = tmp_path / "stira"
+    crew = tmp_path / "crew"
+    (stira / "crews" / "default").mkdir(parents=True)
+    (stira / "crews" / "default" / "IPD.md").write_text("P0 mission", encoding="utf-8")
+    sessions = crew / "sessions"
+    sessions.mkdir(parents=True)
+    for s in range(8):
+        lines = [_json.dumps({"_type": "metadata", "agent": "default", "title": f"長いセッション{s}"})]
+        for i in range(200):
+            lines.append(_json.dumps(
+                {"role": "user" if i % 2 == 0 else "assistant",
+                 "content": f"s{s}m{i} " + "調査結果と設計判断の長い本文。" * 40},
+                ensure_ascii=False,
+            ))
+        (sessions / f"dashboard_chat-{s}.jsonl").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    collected = collect_harvest_input(
+        stira,
+        crew,
+        core_records={"default": {"coreHash": compute_core_hash(b"P0 mission"), "coreHashHealthy": True}},
+    )
+    # The route (backend.routes._single_crew_harvest_input) adds run/basis fields
+    # of well under 2k chars; assert the headroom that leaves for them.
+    route_added = {
+        "runId": "manual-1793783333-499f8e50",
+        "crewId": "default",
+        "basisCoreRevisionId": "0" * 64,
+        "basisCoreHash": "0" * 64,
+        "coreHashHealthy": True,
+        "trigger": "manual",
+        "collectedAt": "2026-11-04T18:10:00+00:00",
+    }
+    staged = {**collected, **route_added}
+
+    assert _tool_size(staged) <= TOOL_OUTPUT_CAP - 4_000
+    entry = staged["crews"][0]
+    assert entry["evidenceBudget"]["partial"] is True
+    assert sum(len(s["messages"]) for s in entry["sessions"]) > 0

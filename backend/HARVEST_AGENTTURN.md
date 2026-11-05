@@ -77,7 +77,11 @@ filesystem, shell, or Python fallback in this restricted agent.
    terminal `completed` with `writes.written=0` and `no_ipd`; write no leaf.
 5. Otherwise record `collected` using bounded counts derived from the package and
    `agentsSeen` copied from the crew object. Conversation evidence is already
-   bounded; the strict 24-hour window is already applied to cron/subagent data.
+   bounded to a ~24,000-character budget (`evidenceBudget` on the crew object:
+   `partial`, `truncatedMessages`, `droppedMessages`, `emptiedSessions`,
+   `overBudget`). When `partial` is true the oldest messages were dropped, so
+   treat absent evidence as unknown, never as "did not happen". The strict
+   24-hour window is already applied to cron/subagent data.
 
 ### 4. Build the integrated harvest snapshot
 
