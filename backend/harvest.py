@@ -540,6 +540,164 @@ def write_entry_if_new(
 # ---------------------------------------------------------------------------
 
 
+# ── Evidence budget ─────────────────────────────────────────────────────────
+# The distiller reads the staged package through ``stira_get_harvest_candidates``.
+# KiroCrew caps one tool result at ~30k characters; past that the middle of the
+# package is unreadable and the run fails closed (``OutputTruncated``). The
+# budget below is measured on the same serialization the tool returns
+# (``ensure_ascii=False, indent=2``) and leaves headroom for the tool wrapper and
+# the per-run fields the route adds later.
+DEFAULT_MAX_PACKAGE_CHARS = 24_000
+DEFAULT_MAX_MESSAGE_CHARS = 1_500
+# Rough indentation cost of one message once nested inside crews/sessions/messages.
+_NESTED_MESSAGE_OVERHEAD = 16
+_BUDGET_SHRINK_ATTEMPTS = 24
+
+
+def _serialized_size(value: Any) -> int:
+    """Size of ``value`` as the harvest-candidates tool serializes it."""
+
+    return len(json.dumps(value, ensure_ascii=False, indent=2))
+
+
+def _clip_message(message: Any, limit: int) -> tuple[Any, bool]:
+    if not isinstance(message, dict):
+        return message, False
+    content = message.get("content")
+    if not isinstance(content, str) or len(content) <= limit:
+        return message, False
+    omitted = len(content) - limit
+    return {**message, "content": f"{content[:limit]}…[truncated {omitted} chars]"}, True
+
+
+def _waterfill(costs: Sequence[int], budget: int) -> list[int]:
+    """Split ``budget`` across sessions: small sessions keep all, big ones share the rest."""
+
+    shares = [0] * len(costs)
+    remaining = max(budget, 0)
+    order = sorted(range(len(costs)), key=lambda i: (costs[i], i))
+    for position, index in enumerate(order):
+        left = len(order) - position
+        share = min(costs[index], remaining // left)
+        shares[index] = share
+        remaining -= share
+    return shares
+
+
+def _trim_sessions(
+    sessions: Sequence[Mapping[str, Any]], message_budget: int
+) -> tuple[list[dict[str, Any]], int, int]:
+    """Keep the most recent messages of each session within its fair share."""
+
+    messages_by_session = [
+        list(s.get("messages", [])) if isinstance(s.get("messages"), list) else []
+        for s in sessions
+    ]
+    costs = [
+        [_serialized_size(m) + _NESTED_MESSAGE_OVERHEAD for m in messages]
+        for messages in messages_by_session
+    ]
+    shares = _waterfill([sum(c) for c in costs], message_budget)
+    trimmed: list[dict[str, Any]] = []
+    dropped = 0
+    emptied = 0
+    for session, messages, message_costs, share in zip(
+        sessions, messages_by_session, costs, shares
+    ):
+        kept_from = len(messages)
+        used = 0
+        while kept_from > 0 and used + message_costs[kept_from - 1] <= share:
+            kept_from -= 1
+            used += message_costs[kept_from]
+        kept = messages[kept_from:]
+        dropped += kept_from
+        if messages and not kept:
+            emptied += 1
+        trimmed.append({**dict(session), "messages": kept})
+    return trimmed, dropped, emptied
+
+
+def fit_crew_to_budget(
+    crew_entry: Mapping[str, Any],
+    *,
+    max_chars: int = DEFAULT_MAX_PACKAGE_CHARS,
+    max_message_chars: int = DEFAULT_MAX_MESSAGE_CHARS,
+) -> dict[str, Any]:
+    """Deterministically bound one crew's evidence to ``max_chars`` serialized.
+
+    Pure: same input, same output, input untouched. Order of reduction:
+    (1) clip every message to ``max_message_chars``; (2) if still over budget,
+    split the remaining budget across sessions (small sessions keep everything,
+    large ones share the rest) and keep each session's most recent messages.
+    The result carries ``evidenceBudget`` so the distiller knows evidence is
+    partial and must not read absence of evidence as absence of an event.
+    """
+
+    if not isinstance(max_chars, int) or isinstance(max_chars, bool) or max_chars <= 0:
+        raise ValueError("max_chars must be a positive integer")
+    if (
+        not isinstance(max_message_chars, int)
+        or isinstance(max_message_chars, bool)
+        or max_message_chars <= 0
+    ):
+        raise ValueError("max_message_chars must be a positive integer")
+
+    entry = dict(crew_entry)
+    sessions = [dict(s) for s in entry.get("sessions", []) if isinstance(s, Mapping)]
+
+    clipped = 0
+    clipped_sessions: list[dict[str, Any]] = []
+    for session in sessions:
+        messages = session.get("messages")
+        if isinstance(messages, list):
+            new_messages = []
+            for message in messages:
+                new_message, was_clipped = _clip_message(message, max_message_chars)
+                clipped += int(was_clipped)
+                new_messages.append(new_message)
+            session = {**session, "messages": new_messages}
+        clipped_sessions.append(session)
+
+    def build(sess: list[dict[str, Any]], dropped: int, emptied: int, over: bool) -> dict[str, Any]:
+        applied = bool(clipped or dropped or emptied)
+        return {
+            **entry,
+            "sessions": sess,
+            "evidenceBudget": {
+                "maxChars": max_chars,
+                "truncatedMessages": clipped,
+                "droppedMessages": dropped,
+                "emptiedSessions": emptied,
+                "partial": applied,
+                "overBudget": over,
+            },
+        }
+
+    candidate = build(clipped_sessions, 0, 0, False)
+    if _serialized_size(candidate) <= max_chars:
+        return candidate
+
+    skeleton = build([{**s, "messages": []} for s in clipped_sessions], 0, 0, False)
+    message_budget = max_chars - _serialized_size(skeleton)
+    for _ in range(_BUDGET_SHRINK_ATTEMPTS):
+        trimmed, dropped, emptied = _trim_sessions(clipped_sessions, message_budget)
+        candidate = build(trimmed, dropped, emptied, False)
+        size = _serialized_size(candidate)
+        if size <= max_chars:
+            return candidate
+        # Over by ``size - max_chars``: take that away, plus 10%, and retry.
+        message_budget = int((message_budget - (size - max_chars)) * 0.9)
+        if message_budget <= 0:
+            break
+
+    # Nothing fits (e.g. the core text alone is near the budget): ship no messages.
+    trimmed, dropped, emptied = _trim_sessions(clipped_sessions, 0)
+    final = build(trimmed, dropped, emptied, False)
+    if _serialized_size(final) > max_chars:
+        final["evidenceBudget"]["overBudget"] = True
+    return final
+
+
 def collect_harvest_input(
     stira_home: str | Path,
     crew_home: str | Path,
@@ -547,6 +705,8 @@ def collect_harvest_input(
     core_records: Mapping[str, Any] | None = None,
     max_sessions_per_crew: int = 8,
     max_messages_per_session: int = 200,
+    max_package_chars: int = DEFAULT_MAX_PACKAGE_CHARS,
+    max_message_chars: int = DEFAULT_MAX_MESSAGE_CHARS,
     activity_window_hours: float = 24.0,
 ) -> dict[str, Any]:
     """Collect everything a harvest run needs, deterministically.
@@ -675,6 +835,17 @@ def collect_harvest_input(
                 "agentsSeen": agents_seen,
             }
         )
+
+    # Bound each crew's evidence so the staged package stays readable through the
+    # candidates tool (see "Evidence budget" above).
+    crews_out = [
+        fit_crew_to_budget(
+            entry,
+            max_chars=max_package_chars,
+            max_message_chars=max_message_chars,
+        )
+        for entry in crews_out
+    ]
 
     return {
         "schema": "stira.harvest.input.v1",
