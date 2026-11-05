@@ -126,6 +126,8 @@ is fixed because the MCP endpoint URLs above pin it.
   `evidenceBudget`; the distiller must not read missing evidence as "nothing
   happened". Very long histories are therefore harvested in recent slices rather
   than all at once.
+  Token cost: harvests on busy crews that used to fail with `OutputTruncated` now
+  run to completion, so they spend more distiller tokens (bounded by the package cap).
 - **Scheduled script crons.** The reflection script crons document the intended
   app-owned layout; depending on your Kiro Crew version, app-root-relative
   script crons may require host support to register. Manual harvest from the
